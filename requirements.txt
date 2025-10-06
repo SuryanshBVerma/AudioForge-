@@ -1,0 +1,7 @@
+fastapi
+uvicorn[standard]
+
+# Install the CPU-only version of PyTorch to reduce image size
+# This is a dependency for the neutts-air model
+torch --index-url https://download.pytorch.org/whl/cpu
+torchaudio --index-url https://download.pytorch.org/whl/cpu
