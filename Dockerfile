@@ -19,8 +19,11 @@ RUN git clone https://github.com/neuphonic/neutts-air.git
 WORKDIR /neutts-air
 RUN pip install --no-cache-dir -r requirements.txt
 
+# 5.1. Copy the /neutts-air/neuttsair folder within the Docker container
+RUN cp -r /neutts-air/neuttsair /app
+
 # 6. Delete the cloned repository after installation
-RUN rm -rf /neutts-air
+# RUN rm -rf /neutts-air
 
 # 7. Set the working directory back to our application folder
 WORKDIR /app
