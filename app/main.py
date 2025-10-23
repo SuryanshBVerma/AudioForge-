@@ -8,6 +8,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 import soundfile as sf
+import torch
 
 from neuttsair.neutts import NeuTTSAir
 
@@ -23,13 +24,14 @@ app = FastAPI(
 )
 
 # --- Model Loading and Caching Logic ---
-logging.info("Loading NeuTTSAir model...")
-app_state["tts_model"] = NeuTTSAir(
-    backbone_repo="neuphonic/neutts-air-q4-gguf",
-    backbone_device="cpu",
-    codec_repo="neuphonic/neucodec",
-    codec_device="cpu"
-)
+device = "cuda" if torch.cuda.is_available() else "cpu"
+logging.info(f"Loading NeuTTSAir model on device: {device} ...")
+app_state["tts_model"] =  NeuTTSAir(
+        backbone_repo="./local_models/backbone/",  # Path to the saved backbone folder
+        codec_repo="./local_models/codec.pt",       # Path to the saved codec .pt file
+        backbone_device="cpu", # or "cuda"
+        codec_device="cpu"     # or "cuda"
+    )
 logging.info("Model loaded successfully.")
 
 # --- Pre-load and Cache Reference Voices ---
