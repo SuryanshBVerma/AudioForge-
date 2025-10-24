@@ -84,34 +84,23 @@ Record a sample of your voice, keeping the following guidelines in mind for the 
 2.  Create a text file (`.txt`) containing the exact transcript of your recording. The name of the text file should match the name of your `.wav` file. For example, if your audio file is `my_voice.wav`, the transcript file should be `my_voice.txt`.
 3.  Place the transcript file in the same `app/samples` directory.
 
-### Step 3: Update the Service to Use Your Voice
+### Step 3: Use Your Voice in an API Call
 
-To make your voice available in the API, you need to update the `app/main.py` file:
+The service will automatically detect and load new voices from the `samples` directory.
 
-1.  **Add your voice to the `VoiceType` enum:**
+To use your voice, simply make an API call and set the `voice_type` parameter to the name of your audio file (without the `.wav` extension).
 
-    Open `app/main.py` and add a new entry for your voice in the `VoiceType` enum. For example:
+For example, if you added `my_voice.wav` and `my_voice.txt` to the `app/samples` directory, you would use `"my_voice"` as the `voice_type`:
 
-    ```python
-    class VoiceType(str, Enum):
-        MALE = "MALE"
-        FEMALE = "FEMALE"
-        MY_VOICE = "MY_VOICE"  # Add your voice here
-    ```
+**Request Body:**
+```json
+{
+  "text": "This is a test of my own voice.",
+  "voice_type": "my_voice"
+}
+```
 
-2.  **Add your voice to the `voice_types` dictionary:**
-
-    In the same file, add a new entry to the `voice_types` dictionary that maps your new voice type to the audio and text files you added.
-
-    ```python
-    voice_types = {
-        "MALE": {"audio": "samples/male.wav", "text": "samples/male.txt"},
-        "FEMALE": {"audio": "samples/female.wav", "text": "samples/female.txt"},
-        "MY_VOICE": {"audio": "samples/my_voice.wav", "text": "samples/my_voice.txt"}  # Add your voice here
-    }
-    ```
-
-After making these changes, you will need to rebuild the Docker image for the changes to take effect. Once rebuilt and running, you can use `"MY_VOICE"` as the `voice_type` in your API requests.
+The service will find your audio sample, encode it, cache it for future requests, and use it to generate the speech.
 
 
 ## API Endpoints
