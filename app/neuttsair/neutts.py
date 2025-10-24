@@ -41,8 +41,8 @@ class NeuTTSAir:
 
     def __init__(
         self,
-        backbone_repo="/app/neuttsair/local_models/backbone/",
-        codec_repo="/app/neuttsair/local_models/codec.pt",
+        backbone_repo="neuttsair/local_models/backbone/",
+        codec_repo="neuttsair/local_models/codec.pt",
         backbone_device="cpu",
         codec_device="cpu",
     ):
@@ -94,6 +94,7 @@ class NeuTTSAir:
                 torch.device(backbone_device)
             )
 
+    # ...existing code...
     def _load_codec(self, codec_repo, codec_device):
 
         print(f"Loading codec from: {codec_repo} on {codec_device} ...")
@@ -101,24 +102,39 @@ class NeuTTSAir:
         if str(codec_repo).endswith(".pt"):
             print("Detected local .pt file for codec. Loading from state_dict...")
             
-            # NOTE: This assumes the saved file is for the standard NeuCodec.
-            # If you saved a DistillNeuCodec, you would instantiate that here instead
-            # (e.g., self.codec = DistillNeuCodec())
-            self.codec = NeuCodec()
-            
-            self.codec.load_state_dict(
-                torch.load(codec_repo, map_location=torch.device(codec_device))
-            )
-            self.codec.eval().to(codec_device)
+            state = torch.load(codec_repo, map_location=torch.device(codec_device))
+            # Try loading into NeuCodec first, then DistillNeuCodec as a fallback
+            load_error = None
+            try:
+                self.codec = NeuCodec(sample_rate=self.sample_rate, hop_length=self.hop_length)
+                self.codec.load_state_dict(state)
+            except Exception as e:
+                load_error = e
+                try:
+                    self.codec = DistillNeuCodec(sample_rate=self.sample_rate, hop_length=self.hop_length)
+                    self.codec.load_state_dict(state)
+                    load_error = None
+                except Exception as e2:
+                    load_error = e2
+
+            if load_error is not None:
+                raise RuntimeError(
+                    "Failed to load codec state dict into NeuCodec or DistillNeuCodec"
+                ) from load_error
+
+            self.codec.eval().to(torch.device(codec_device))
+            self._is_onnx_codec = False
             return
         
         match codec_repo:
             case "neuphonic/neucodec":
                 self.codec = NeuCodec.from_pretrained(codec_repo)
-                self.codec.eval().to(codec_device)
+                self.codec.eval().to(torch.device(codec_device))
+                self._is_onnx_codec = False
             case "neuphonic/distill-neucodec":
                 self.codec = DistillNeuCodec.from_pretrained(codec_repo)
-                self.codec.eval().to(codec_device)
+                self.codec.eval().to(torch.device(codec_device))
+                self._is_onnx_codec = False
             case "neuphonic/neucodec-onnx-decoder":
 
                 if codec_device != "cpu":

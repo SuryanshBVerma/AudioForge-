@@ -27,8 +27,8 @@ app = FastAPI(
 device = "cuda" if torch.cuda.is_available() else "cpu"
 logging.info(f"Loading NeuTTSAir model on device: {device} ...")
 app_state["tts_model"] =  NeuTTSAir(
-        backbone_repo="./local_models/backbone/",  # Path to the saved backbone folder
-        codec_repo="./local_models/codec.pt",       # Path to the saved codec .pt file
+        backbone_repo="neuttsair/local_models/backbone/", 
+        codec_repo="neuttsair/local_models/codec.pt",     
         backbone_device="cpu", # or "cuda"
         codec_device="cpu"     # or "cuda"
     )
