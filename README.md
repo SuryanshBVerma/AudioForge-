@@ -31,6 +31,7 @@ The core logic is exposed via a FastAPI server, which provides API endpoints to 
 
 ## Setup Instructions
 
+> [!NOTE]
 > **Performance Considerations :** For optimal performance, it is recommended to run this service in a Linux environment where Docker is installed natively. When running on Windows or macOS via Docker Desktop, the service may experience significantly slower performance due to the overhead of the underlying virtual machine.
 
 
