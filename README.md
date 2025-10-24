@@ -1,6 +1,11 @@
 # Audio Forge (TTS in your own voice)
 
+
 This project provides a local Text-to-Speech (TTS) service that can clone a voice from an audio sample and then generate speech in that same voice. It is designed to be a self-contained service that you can run locally.
+
+## Try it out for free
+
+You can try out the `neutts-air` model live on [Hugging Face Spaces](https://huggingface.co/spaces/neuphonic/neutts-air)
 
 ## How it Works
 
@@ -25,6 +30,8 @@ The core logic is exposed via a FastAPI server, which provides API endpoints to 
 *   **Containerization:** `Docker`
 
 ## Setup Instructions
+
+> **Performance Considerations :** For optimal performance, it is recommended to run this service in a Linux environment where Docker is installed natively. When running on Windows or macOS via Docker Desktop, the service may experience significantly slower performance due to the overhead of the underlying virtual machine.
 
 
 ### 1. Download the Models
@@ -58,7 +65,53 @@ docker run -p 8000:8000 tts-service
 
 The TTS service will now be running and accessible at `http://localhost:8000`.
 
-> **Performance Considerations :** For optimal performance, it is recommended to run this service in a Linux environment where Docker is installed natively. When running on Windows or macOS via Docker Desktop, the service may experience significantly slower performance due to the overhead of the underlying virtual machine.
+## Using Your Own Voice
+
+You can configure the service to use your own voice by following these steps:
+
+### Step 1: Record Your Voice Sample
+
+Record a sample of your voice, keeping the following guidelines in mind for the best results:
+
+*   **Format:** Mono channel, 16-44 kHz sample rate, saved as a `.wav` file.
+*   **Length:** Between 3 and 15 seconds.
+*   **Quality:** The audio should be clean, with minimal to no background noise.
+*   **Content:** Use natural, continuous speech, like a monologue or conversation with few pauses. This helps the model capture the tone of your voice effectively.
+
+### Step 2: Add the Audio and Transcript
+
+1.  Place your recorded `.wav` file in the `app/samples` directory. For example, name it `my_voice.wav`.
+2.  Create a text file (`.txt`) containing the exact transcript of your recording. The name of the text file should match the name of your `.wav` file. For example, if your audio file is `my_voice.wav`, the transcript file should be `my_voice.txt`.
+3.  Place the transcript file in the same `app/samples` directory.
+
+### Step 3: Update the Service to Use Your Voice
+
+To make your voice available in the API, you need to update the `app/main.py` file:
+
+1.  **Add your voice to the `VoiceType` enum:**
+
+    Open `app/main.py` and add a new entry for your voice in the `VoiceType` enum. For example:
+
+    ```python
+    class VoiceType(str, Enum):
+        MALE = "MALE"
+        FEMALE = "FEMALE"
+        MY_VOICE = "MY_VOICE"  # Add your voice here
+    ```
+
+2.  **Add your voice to the `voice_types` dictionary:**
+
+    In the same file, add a new entry to the `voice_types` dictionary that maps your new voice type to the audio and text files you added.
+
+    ```python
+    voice_types = {
+        "MALE": {"audio": "samples/male.wav", "text": "samples/male.txt"},
+        "FEMALE": {"audio": "samples/female.wav", "text": "samples/female.txt"},
+        "MY_VOICE": {"audio": "samples/my_voice.wav", "text": "samples/my_voice.txt"}  # Add your voice here
+    }
+    ```
+
+After making these changes, you will need to rebuild the Docker image for the changes to take effect. Once rebuilt and running, you can use `"MY_VOICE"` as the `voice_type` in your API requests.
 
 
 ## API Endpoints
